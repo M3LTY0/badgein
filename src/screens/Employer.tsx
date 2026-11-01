@@ -222,7 +222,7 @@ export default function Employer() {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-[12px] font-extrabold">Scan a badge</h2>
+            <h2 className="text-[12px] font-extrabold">Add a badge</h2>
             <button onClick={() => setScanning(false)} aria-label="Close" className="text-[14px] leading-none text-slate-300 hover:text-white">×</button>
           </div>
           <Scanner

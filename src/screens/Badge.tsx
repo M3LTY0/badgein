@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Link } from "react-router-dom";
 import { useProfile } from "../ProfileContext";
@@ -5,12 +6,37 @@ import { badgeUrl } from "../lib/badgeLink";
 
 export default function Badge() {
   const { profile } = useProfile();
+  const url = badgeUrl(profile);
+  const linkRef = useRef<HTMLInputElement>(null);
+  const copiedTimer = useRef<number>(0);
+  const [copied, setCopied] = useState(false);
   // TODO(logic): the event name ("Career Fair 2026") is hardcoded below; take it from the event the user checked in to.
   const programShort = profile.program.split(",")[0].trim();
   const { share } = profile;
   const shared = ["Skills", share.certs && "Certifications", share.resume && "Resume", share.linkedin && profile.linkedin && "LinkedIn"]
     .filter(Boolean)
     .join(" · ");
+
+  useEffect(() => () => window.clearTimeout(copiedTimer.current), []);
+
+  const copyLink = async () => {
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(url);
+      ok = true;
+    } catch {
+      const input = linkRef.current;
+      if (input) {
+        input.focus();
+        input.select();
+        ok = document.execCommand("copy");
+      }
+    }
+    if (!ok) return;
+    setCopied(true);
+    window.clearTimeout(copiedTimer.current);
+    copiedTimer.current = window.setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="flex flex-1 flex-col">
@@ -23,10 +49,29 @@ export default function Badge() {
         <p className="mt-0.5 text-[8.5px] text-blue-100">{programShort} · Career Fair 2026</p>
         {/* Encodes a link to this attendee's profile, honouring the sharing toggles on the profile screen. */}
         <div className="mt-2 rounded-lg bg-white p-1.5">
-          <QRCodeSVG value={badgeUrl(profile)} size={140} level="M" fgColor="#0a3aa8" bgColor="#ffffff" marginSize={0} role="img" aria-label="Badge QR code" />
+          <QRCodeSVG value={url} size={140} level="M" fgColor="#0a3aa8" bgColor="#ffffff" marginSize={0} role="img" aria-label="Badge QR code" />
         </div>
-        <p className="mt-3 text-[8px] text-blue-100">Show this to exchange info</p>
-        <p className="mt-1 text-center text-[7.5px] text-blue-200/80">Shares: {shared}</p>
+        <label className="mt-2 w-full">
+          <span className="sr-only">Badge link</span>
+          <input
+            ref={linkRef}
+            readOnly
+            value={url}
+            onFocus={(e) => e.target.select()}
+            className="w-full truncate rounded-md border border-white/20 bg-black/20 px-1.5 py-1 text-[7.5px] text-blue-50 outline-none"
+          />
+        </label>
+        <button
+          type="button"
+          onClick={copyLink}
+          className="mt-1.5 w-full rounded-md bg-white py-1.5 text-[9.5px] font-bold text-brand-deep hover:brightness-110"
+        >
+          {copied ? "Copied" : "Copy badge link"}
+        </button>
+        <p className="mt-1.5 text-center text-[7.5px] leading-snug text-blue-100">
+          Share this link, or paste it on Scan in place of a QR scan
+        </p>
+        <p className="mt-2 text-center text-[7.5px] text-blue-200/80">Shares: {shared}</p>
       </div>
 
       {/* TODO(logic): Add to wallet (Apple/Google Wallet pass). */}

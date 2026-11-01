@@ -1,4 +1,5 @@
 import { CERTIFICATIONS, SKILLS } from "./options";
+import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 /** Fields we can pull out of a resume. Everything is optional: only what was actually found. */
 export type ParsedResume = {
@@ -27,6 +28,7 @@ export async function extractPdfText(file: File): Promise<string> {
   const [{ getDocument, GlobalWorkerOptions }, worker] = await Promise.all([
     import("pdfjs-dist"),
     import("pdfjs-dist/build/pdf.worker.min.mjs?url"),
+    
   ]);
   GlobalWorkerOptions.workerSrc = worker.default;
 
@@ -60,30 +62,54 @@ const SKILL_PATTERNS: Record<string, RegExp[]> = {
   "HTML/CSS": [/\bhtml5?\b/, /\bcss3?\b/],
   React: [/\breact(\.?js)?\b/],
   "UX Design": [/\bux\b/, /\bui\/ux\b/, /\buser experience\b/],
-  "Data Analysis": [/\bdata analy(sis|st|tics)\b/, /\bpower ?bi\b/, /\btableau\b/],
-  "Cloud (AWS/Azure)": [/\baws\b/, /\bazure\b/, /\bamazon web services\b/, /\bgoogle cloud\b/, /\bgcp\b/],
-  "Project Management": [/\bproject manage(ment|r)\b/, /\bproject coordinat/, /\bscrum\b/],
+  "Data Analysis": [
+    /\bdata analy(sis|st|tics)\b/,
+    /\bpower ?bi\b/,
+    /\btableau\b/,
+  ],
+  "Cloud (AWS/Azure)": [
+    /\baws\b/,
+    /\bazure\b/,
+    /\bamazon web services\b/,
+    /\bgoogle cloud\b/,
+    /\bgcp\b/,
+  ],
+  "Project Management": [
+    /\bproject manage(ment|r)\b/,
+    /\bproject coordinat/,
+    /\bscrum\b/,
+  ],
   Communication: [/\bcommunicat(ion|ions|e|ing)\b/],
   Teamwork: [/\bteam ?work\b/, /\bteam player\b/, /\bcollaborat/],
 };
 
 const CERT_PATTERNS: Record<string, RegExp[]> = {
-  "AWS Certified Cloud Practitioner": [/aws certified cloud practitioner/, /\bclf-c0\d\b/],
-  "Microsoft Azure Fundamentals (AZ-900)": [/\baz-?900\b/, /azure fundamentals/],
+  "AWS Certified Cloud Practitioner": [
+    /aws certified cloud practitioner/,
+    /\bclf-c0\d\b/,
+  ],
+  "Microsoft Azure Fundamentals (AZ-900)": [
+    /\baz-?900\b/,
+    /azure fundamentals/,
+  ],
   "CompTIA Security+": [/security\+/, /comptia security/],
   "Google Cloud Digital Leader": [/google cloud digital leader/],
-  "Oracle Certified Java Programmer": [/oracle certified (java )?(programmer|associate|professional)/],
+  "Oracle Certified Java Programmer": [
+    /oracle certified (java )?(programmer|associate|professional)/,
+  ],
   "Certified Scrum Master (CSM)": [/certified scrum master/, /\bcsm\b/],
   "Meta Front-End Developer": [/meta front[- ]?end developer/],
   "Cisco CCNA": [/\bccna\b/],
 };
 
 // A cert mentioned on a line like this is one the person does NOT hold yet, so it must not land on their badge.
-const NOT_HELD = /\b(studying|study(ing)? for|preparing|prepar(ation|ing)|in progress|working (toward|towards)|pursuing|planned|planning|expected|will (write|take)|aiming)\b/i;
+const NOT_HELD =
+  /\b(studying|study(ing)? for|preparing|prepar(ation|ing)|in progress|working (toward|towards)|pursuing|planned|planning|expected|will (write|take)|aiming)\b/i;
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /** Whole-word match that also works for labels ending in symbols, like "C#" or "Security+". */
-const wordRe = (s: string) => new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(s)}(?![\\p{L}\\p{N}])`, "u");
+const wordRe = (s: string) =>
+  new RegExp(`(?<![\\p{L}\\p{N}])${escapeRe(s)}(?![\\p{L}\\p{N}])`, "u");
 
 /**
  * Keywords for one dropdown entry. The entry's own text is always a keyword, so a skill added to the dropdown
@@ -96,7 +122,12 @@ function patternsFor(option: string, hand?: RegExp[]): RegExp[] {
   if (!hand) {
     const bare = label.replace(/\(.*?\)/g, " ");
     const inParens = [...label.matchAll(/\((.*?)\)/g)].map((m) => m[1]);
-    const tokens = [bare, ...bare.split("/"), ...inParens, ...inParens.flatMap((p) => p.split(/[/,&]/))]
+    const tokens = [
+      bare,
+      ...bare.split("/"),
+      ...inParens,
+      ...inParens.flatMap((p) => p.split(/[/,&]/)),
+    ]
       .map((t) => t.trim())
       .filter((t) => t.length >= 2);
     found.push(...tokens.map(wordRe));
@@ -105,26 +136,39 @@ function patternsFor(option: string, hand?: RegExp[]): RegExp[] {
 }
 
 /** Options whose keywords appear in `text`. With `skip`, occurrences on a line matching `skip` don't count. */
-function matchList(text: string, patterns: Record<string, RegExp[]>, options: string[], skip?: RegExp) {
+function matchList(
+  text: string,
+  patterns: Record<string, RegExp[]>,
+  options: string[],
+  skip?: RegExp,
+) {
   return options.filter((o) =>
     patternsFor(o, patterns[o]).some((re) => {
-      for (const m of text.matchAll(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"))) {
+      for (const m of text.matchAll(
+        new RegExp(
+          re.source,
+          re.flags.includes("g") ? re.flags : re.flags + "g",
+        ),
+      )) {
         if (!skip) return true;
         const start = text.lastIndexOf("\n", m.index) + 1;
         const end = text.indexOf("\n", m.index);
-        if (!skip.test(text.slice(start, end === -1 ? undefined : end))) return true;
+        if (!skip.test(text.slice(start, end === -1 ? undefined : end)))
+          return true;
       }
       return false;
-    })
+    }),
   );
 }
 
-const titleCase = (s: string) => s.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase());
+const titleCase = (s: string) =>
+  s.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (m) => m.toUpperCase());
 
 /** First short line that looks like a person's name ("Jane Q. Doe", "JANE DOE"). */
 function findName(lines: string[]): string | undefined {
   for (const line of lines.slice(0, 6)) {
-    if (/\d|@|https?:|\bresume\b|\bcurriculum\b|\bvitae\b|\bcv\b/i.test(line)) continue;
+    if (/\d|@|https?:|\bresume\b|\bcurriculum\b|\bvitae\b|\bcv\b/i.test(line))
+      continue;
     const words = line.split(/\s+/);
     if (words.length < 2 || words.length > 4) continue;
     if (!words.every((w) => /^\p{Lu}[\p{L}.'’-]*$/u.test(w))) continue;
@@ -133,8 +177,10 @@ function findName(lines: string[]): string | undefined {
   return undefined;
 }
 
-const LINKEDIN_RE = /(?:https?:\/\/)?(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[A-Za-z0-9_%-]+\/?/i;
-const PROGRAM_RE = /\b(advanced diploma|diploma|bachelor|b\.?\s?sc|associate degree|degree|certificate in)\b/i;
+const LINKEDIN_RE =
+  /(?:https?:\/\/)?(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[A-Za-z0-9_%-]+\/?/i;
+const PROGRAM_RE =
+  /\b(advanced diploma|diploma|bachelor|b\.?\s?sc|associate degree|degree|certificate in)\b/i;
 
 /** First education-looking line, with dates stripped. Best effort: the user can edit it afterwards. */
 function findProgram(lines: string[]): string | undefined {
@@ -151,13 +197,20 @@ function findProgram(lines: string[]): string | undefined {
 
 /** Keyword matching against our own lists. Works offline and keeps the resume on the device. */
 export function localExtract(text: string): ParsedResume {
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
   const lower = text.toLowerCase();
   const linkedin = text.match(LINKEDIN_RE)?.[0];
   return {
     name: findName(lines),
     program: findProgram(lines),
-    linkedin: linkedin ? (linkedin.startsWith("http") ? linkedin : `https://${linkedin}`) : undefined,
+    linkedin: linkedin
+      ? linkedin.startsWith("http")
+        ? linkedin
+        : `https://${linkedin}`
+      : undefined,
     skills: matchList(lower, SKILL_PATTERNS, SKILLS),
     certs: matchList(lower, CERT_PATTERNS, CERTIFICATIONS, NOT_HELD),
   };
@@ -210,19 +263,27 @@ export function localExtract(text: string): ParsedResume {
 
 /** Upload -> text -> fields, using keyword matching against the skill and certification lists. */
 export async function parseResume(file: File): Promise<ParseOutcome> {
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+  if (
+    file.type !== "application/pdf" &&
+    !file.name.toLowerCase().endsWith(".pdf")
+  ) {
     throw new ResumeError("Please upload a PDF.");
   }
-  if (file.size > MAX_BYTES) throw new ResumeError("That PDF is over 10 MB. Try a smaller file.");
+  if (file.size > MAX_BYTES)
+    throw new ResumeError("That PDF is over 10 MB. Try a smaller file.");
 
   let text: string;
   try {
     text = await extractPdfText(file);
   } catch {
-    throw new ResumeError("Couldn't open that PDF. It may be damaged or password-protected.");
+    throw new ResumeError(
+      "Couldn't open that PDF. It may be damaged or password-protected.",
+    );
   }
   if (text.replace(/\s/g, "").length < 40) {
-    throw new ResumeError("No readable text in that PDF (it may be a scan). Fill in your details by hand.");
+    throw new ResumeError(
+      "No readable text in that PDF (it may be a scan). Fill in your details by hand.",
+    );
   }
 
   // AI parsing disabled for now. To re-enable, uncomment the next two lines and delete the final return.
