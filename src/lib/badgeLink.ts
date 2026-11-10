@@ -61,9 +61,28 @@ export function encodeShared(s: SharedProfile): string {
   return toB64(JSON.stringify({ i: s.id, n: s.name, p: s.program, s: s.skills, c: s.certs, r: s.resume, l: s.linkedin }));
 }
 
+/**
+ * Address that goes into the QR code. Set VITE_PUBLIC_URL (for example https://badgein.vercel.app) so a badge made
+ * on localhost still opens the live site on someone else's phone. If it is unset or invalid, the QR uses wherever
+ * the app is currently running, which is already right when you open the live site itself.
+ */
+function publicBase(): string {
+  const configured = import.meta.env.VITE_PUBLIC_URL;
+  if (configured) {
+    try {
+      const u = new URL(configured);
+      if (u.protocol === "https:" || u.protocol === "http:") return u.origin;
+    } catch {
+      /* fall through to the warning below */
+    }
+    console.warn(`VITE_PUBLIC_URL "${configured}" is not a valid web address, using ${window.location.origin} instead.`);
+  }
+  return window.location.origin;
+}
+
 /** Full link that goes into the QR code. */
 export function badgeUrl(p: ProfileData): string {
-  return `${window.location.origin}/p#d=${encodeShared(buildShared(p))}`;
+  return `${publicBase()}/p#d=${encodeShared(buildShared(p))}`;
 }
 
 const str = (v: unknown) => (typeof v === "string" ? v.slice(0, MAX_TEXT) : "");

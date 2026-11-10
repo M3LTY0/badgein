@@ -31,3 +31,47 @@ users their resume text is sent to Anthropic.
 ## QR badges
 
 The badge QR encodes a link containing the profile (see `src/lib/badgeLink.ts`). Camera scanning needs `https` or `localhost`.
+The address in the QR is `VITE_PUBLIC_URL` if set, otherwise wherever the app is running (see `.env.example`).
+
+## Putting it online (Vercel)
+
+Once the app is on a public https address, anyone can open a badge link from any phone on any network.
+`vercel.json` is already set up so links like `/p` work when opened directly.
+
+### Option A: GitHub + Vercel website (recommended, redeploys automatically when you push)
+
+1. Make a free account at github.com, click **New repository**, name it `badgein`, leave it empty, click **Create**.
+2. In a terminal, inside this project folder:
+   ```
+   git init
+   git add .
+   git commit -m "badgeIn"
+   git branch -M main
+   git remote add origin https://github.com/YOUR-USERNAME/badgein.git
+   git push -u origin main
+   ```
+   (`.gitignore` keeps `node_modules`, `dist` and `.env` out of the upload.)
+3. Go to vercel.com, **Sign Up > Continue with GitHub**.
+4. Click **Add New > Project**, pick the `badgein` repo, click **Import**.
+5. Vercel detects Vite by itself (build command `npm run build`, output `dist`). Click **Deploy** and wait about a minute.
+6. You get an address like `https://badgein-abc123.vercel.app`. Open it on your phone.
+
+### Option B: command line only (no GitHub)
+
+```
+npx vercel          # first run: log in, accept the defaults
+npx vercel --prod   # publish to the real address
+```
+
+### After the first deploy
+
+- **Optional:** in Vercel, **Settings > Environment Variables**, add `VITE_PUBLIC_URL` = your address (no trailing path),
+  then **Deployments > Redeploy**. This makes badges created while developing on localhost point at the live site.
+- **Test it properly:** on your phone with Wi-Fi switched off (mobile data), open the address, fill in a profile, open
+  the badge, and scan it with a second phone's normal camera app. The profile page should open.
+- Vercel's free Hobby plan is meant for personal, non-commercial projects. If badgeIn becomes a business, check their terms.
+
+### Known limits until there is a backend
+
+Profiles and employers' saved connections still live in each person's own browser, resumes are shared by file name only,
+and a shared link can't be revoked.
