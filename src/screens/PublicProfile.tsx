@@ -11,9 +11,9 @@ export default function PublicProfile() {
   if (!parsed) {
     return (
       <div className="my-auto text-center">
-        <p className="text-[12px] font-extrabold">Badge not found</p>
-        <p className="mt-1.5 text-[9.5px] text-slate-300">This link is incomplete or isn't a badgeIn code.</p>
-        <Link to="/" className="mt-3 inline-block text-[10px] font-bold text-brand">Go home</Link>
+        <p className="text-[0.75rem] font-extrabold">Badge not found</p>
+        <p className="mt-1.5 text-[0.5938rem] text-slate-300">This link is incomplete or isn't a badgeIn code.</p>
+        <Link to="/" className="mt-3 inline-block text-[0.625rem] font-bold text-brand">Go home</Link>
       </div>
     );
   }
@@ -23,11 +23,11 @@ export default function PublicProfile() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <Link to="/employer" className="self-start text-[9.5px] text-slate-300 hover:text-white">‹ Connections</Link>
+      <Link to="/employer" className="self-start text-[0.5938rem] text-slate-300 hover:text-white">‹ Connections</Link>
 
       <div className="mt-3">
-        <h2 className="text-[14px] font-extrabold leading-tight">{p.name}</h2>
-        {p.program && <p className="mt-0.5 text-[9.5px] text-slate-300">{p.program}</p>}
+        <h2 className="text-[0.875rem] font-extrabold leading-tight">{p.name}</h2>
+        {p.program && <p className="mt-0.5 text-[0.5938rem] text-slate-300">{p.program}</p>}
       </div>
 
       <Section title="Skills">
@@ -39,7 +39,7 @@ export default function PublicProfile() {
 
       {/* TODO(backend): resume is only a file name for now. Upload the PDF to storage and link to it here. */}
       <Section title="Resume">
-        {p.resume ? <p className="truncate text-[9.5px] text-white">📄 {p.resume}</p> : <Empty />}
+        {p.resume ? <p className="truncate text-[0.5938rem] text-white">📄 {p.resume}</p> : <Empty />}
       </Section>
 
       {p.linkedin && (
@@ -47,7 +47,7 @@ export default function PublicProfile() {
           href={p.linkedin}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 rounded-lg bg-linkedin py-2 text-center text-[10px] font-bold text-white transition hover:brightness-110"
+          className="mt-3 rounded-lg bg-linkedin py-2 text-center text-[0.625rem] font-bold text-white transition hover:brightness-110"
         >
           View LinkedIn
         </a>
@@ -58,7 +58,7 @@ export default function PublicProfile() {
           type="button"
           disabled={saved}
           onClick={() => add(p)}
-          className={`w-full rounded-lg py-2.5 text-[11px] font-bold transition ${
+          className={`w-full rounded-lg py-2.5 text-[0.6875rem] font-bold transition ${
             saved ? "border border-line text-green-400" : "bg-brand text-white hover:brightness-110"
           }`}
         >
@@ -72,19 +72,19 @@ export default function PublicProfile() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mt-3">
-      <p className="mb-1 text-[8px] uppercase tracking-wide text-slate-400">{title}</p>
+      <p className="mb-1 text-[0.5rem] uppercase tracking-wide text-slate-400">{title}</p>
       {children}
     </div>
   );
 }
 
-const Empty = () => <p className="text-[9.5px] text-slate-500">Not shared</p>;
+const Empty = () => <p className="text-[0.5938rem] text-slate-500">Not shared</p>;
 
 function Chips({ items }: { items: string[] }) {
   return (
     <ul className="flex flex-wrap gap-1">
       {items.map((s) => (
-        <li key={s} className="rounded-full bg-chip px-2 py-0.5 text-[8.5px] font-medium text-brand">{s}</li>
+        <li key={s} className="rounded-full bg-chip px-2 py-0.5 text-[0.5312rem] font-medium text-brand">{s}</li>
       ))}
     </ul>
   );

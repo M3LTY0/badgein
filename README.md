@@ -5,6 +5,14 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
+## Phone vs laptop view
+
+- **Under 640px wide (real phones):** no phone mockup. The screen fills the display and everything scales with the
+  screen width (`html.phone-ui` in `src/index.css` sets the root font size, and the phone screens are sized in `rem`).
+- **640px and wider:** the phone mockup (bezel, fixed size) is shown, zoomed to suit the window.
+- When adding to a phone screen, size things in `rem` or Tailwind's built-in sizes (not `px`) so they scale with the phone.
+  The header and the employer dashboard are the exceptions, and they are sized in `px` on purpose.
+
 ## Resume auto-fill (keyword matching)
 
 Uploading a PDF on the Profile screen fills in name, program, LinkedIn, skills and certifications.

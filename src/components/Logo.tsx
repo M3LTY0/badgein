@@ -1,9 +1,12 @@
-type Props = { size?: number; showWordmark?: boolean; className?: string };
+// `size` is in px. With `scalable`, it is treated as rem-based instead, so the logo grows with the phone screen
+// like the rest of the phone UI (the header logo stays a fixed size).
+type Props = { size?: number; showWordmark?: boolean; className?: string; scalable?: boolean };
 
 /** badgeIn mark: blue badge, QR-style "N", NFC arcs. Geometry follows the brand poster. */
-export function LogoMark({ size = 32 }: { size?: number }) {
+export function LogoMark({ size = 32, scalable = false }: { size?: number; scalable?: boolean }) {
+  const len = (px: number) => (scalable ? `${px / 16}rem` : px);
   return (
-    <svg width={size * 1.45} height={size} viewBox="0 0 145 100" fill="none" aria-hidden>
+    <svg width={len(size * 1.45)} height={len(size)} viewBox="0 0 145 100" fill="none" aria-hidden>
       <rect x="0" y="0" width="82" height="100" rx="18" fill="#0d5cff" />
       <rect x="28" y="6" width="26" height="5" rx="2.5" fill="#dbe6ff" />
       <rect x="9" y="19" width="64" height="72" rx="10" fill="#fff" />
@@ -27,12 +30,12 @@ export function LogoMark({ size = 32 }: { size?: number }) {
   );
 }
 
-export default function Logo({ size = 32, showWordmark = true, className = "" }: Props) {
+export default function Logo({ size = 32, showWordmark = true, className = "", scalable = false }: Props) {
   return (
     <span className={`inline-flex items-center gap-1 ${className}`}>
-      <LogoMark size={size} />
+      <LogoMark size={size} scalable={scalable} />
       {showWordmark && (
-        <span className="font-extrabold tracking-tight text-white" style={{ fontSize: size * 0.75 }}>
+        <span className="font-extrabold tracking-tight text-white" style={{ fontSize: scalable ? `${(size * 0.75) / 16}rem` : size * 0.75 }}>
           badge <span className="text-brand">In</span>
         </span>
       )}

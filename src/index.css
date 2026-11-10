@@ -28,3 +28,14 @@ html, body, #root { height: 100%; }
 @media (min-width: 1200px) { .employer-scale { zoom: 1.5; } }
 @media (min-width: 1600px) { .employer-scale { zoom: 1.8; } }
 body { margin: 0; background: var(--color-page); color: white; font-family: var(--font-sans); }
+
+/* Real phones: the phone screens are designed about 14rem wide, so setting 1rem to 1/14 of the screen width makes them
+   fill it exactly, with text, buttons and spacing all growing together. PhoneFrame adds the phone-ui class only while a
+   phone screen is showing, so the header (sized in px) and the employer dashboard are left alone. Capped for big phones. */
+@media (max-width: 639px) {
+  html.phone-ui { font-size: clamp(18px, 7.14vw, 30px); }
+  /* Same colour as the screen, so nothing odd shows below it when the browser's address bar slides away. */
+  html.phone-ui, html.phone-ui body { background: var(--color-phone); }
+  /* iPhones zoom the whole page in when you tap a field with text under 16px. */
+  html.phone-ui input, html.phone-ui select, html.phone-ui textarea { font-size: max(16px, 0.6rem); }
+}

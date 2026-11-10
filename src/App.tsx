@@ -14,7 +14,7 @@ export default function App() {
   return (
     <ProfileProvider>
       <ConnectionsProvider>
-        <div className="flex min-h-full flex-col bg-page">
+        <div className="flex min-h-dvh flex-col bg-page">
           <Header />
           <Routes>
             <Route element={<PhoneFrame><Outlet /></PhoneFrame>}>

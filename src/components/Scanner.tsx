@@ -130,11 +130,11 @@ export default function Scanner({ onProfile }: Props) {
           value={pasted}
           onChange={(e) => setPasted(e.target.value)}
           placeholder="Paste a badge link"
-          className="min-w-0 flex-1 rounded-lg border border-line bg-transparent px-2 py-1.5 text-[9.5px] text-white outline-none placeholder:text-slate-500"
+          className="min-w-0 flex-1 rounded-lg border border-line bg-transparent px-2 py-1.5 text-[0.5938rem] text-white outline-none placeholder:text-slate-500"
         />
         <button
           type="submit"
-          className="rounded-lg bg-brand px-2.5 text-[9.5px] font-bold text-white hover:brightness-110"
+          className="rounded-lg bg-brand px-2.5 text-[0.5938rem] font-bold text-white hover:brightness-110"
         >
           Add
         </button>
@@ -142,7 +142,7 @@ export default function Scanner({ onProfile }: Props) {
 
       <p
         role="status"
-        className="min-h-[12px] text-center text-[9px] text-red-400"
+        className="min-h-[0.75rem] text-center text-[0.5625rem] text-red-400"
       >
         {error}
       </p>
@@ -163,13 +163,13 @@ export default function Scanner({ onProfile }: Props) {
             />
           )}
           {cam === "starting" && (
-            <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-[9.5px] text-slate-300">
+            <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-[0.5938rem] text-slate-300">
               Starting camera…
             </div>
           )}
         </div>
       ) : (
-        <p className="text-center text-[8.5px] text-slate-400">
+        <p className="text-center text-[0.5312rem] text-slate-400">
           {cam === "denied" && "Camera blocked. Paste a badge link instead."}
           {cam === "unsupported" && "Camera scanning isn't available here."}
           {cam === "idle" && (
