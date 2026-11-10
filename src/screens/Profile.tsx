@@ -9,13 +9,13 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="block rounded-lg border border-line px-2 py-1.5">
-      <span className="block text-[8px] text-slate-400">{label}</span>
+      <span className="block text-[0.5rem] text-slate-400">{label}</span>
       {children}
     </div>
   );
 }
 
-const inputCls = "w-full bg-transparent text-[10.5px] text-white outline-none placeholder:text-slate-500";
+const inputCls = "w-full bg-transparent text-[0.6562rem] text-white outline-none placeholder:text-slate-500";
 
 function MultiSelect({ values, onChange, placeholder, options }: {
   values: string[]; onChange: (v: string[]) => void; placeholder: string; options: string[];
@@ -39,13 +39,13 @@ function MultiSelect({ values, onChange, placeholder, options }: {
       {values.length > 0 && (
         <ul className="mt-1.5 flex flex-wrap gap-1">
           {values.map((v) => (
-            <li key={v} className="flex items-center gap-1 rounded-full bg-chip py-0.5 pl-2 pr-1 text-[8.5px] font-medium text-brand">
+            <li key={v} className="flex items-center gap-1 rounded-full bg-chip py-0.5 pl-2 pr-1 text-[0.5312rem] font-medium text-brand">
               {v}
               <button
                 type="button"
                 aria-label={`Remove ${v}`}
                 onClick={() => onChange(values.filter((x) => x !== v))}
-                className="flex h-3 w-3 items-center justify-center rounded-full text-[10px] leading-none hover:bg-line"
+                className="flex h-3 w-3 items-center justify-center rounded-full text-[0.625rem] leading-none hover:bg-line"
               >
                 ×
               </button>
@@ -112,12 +112,12 @@ export default function Profile() {
       // TODO(logic): validate fields and save the profile to a backend, and generate the badge ID, before navigating.
       onSubmit={(e) => { e.preventDefault(); navigate("/badge"); }}
     >
-      <Link to="/" className="self-start text-[9.5px] text-slate-300 hover:text-white">‹ Back</Link>
-      <h2 className="mt-2.5 text-[14px] font-extrabold">Your profile</h2>
+      <Link to="/" className="self-start text-[0.5938rem] text-slate-300 hover:text-white">‹ Back</Link>
+      <h2 className="mt-2.5 text-[0.875rem] font-extrabold">Your profile</h2>
 
       <div className="mb-3 mt-3 flex flex-col gap-2.5">
         {/* Upload comes first: a good resume fills in most of the fields below. */}
-        <label className={`flex items-center justify-center gap-1 rounded-lg border-2 border-dashed border-brand px-2 py-2.5 text-[9px] text-white ${reading ? "cursor-wait opacity-70" : "cursor-pointer"}`}>
+        <label className={`flex items-center justify-center gap-1 rounded-lg border-2 border-dashed border-brand px-2 py-2.5 text-[0.5625rem] text-white ${reading ? "cursor-wait opacity-70" : "cursor-pointer"}`}>
           <input
             type="file"
             accept=".pdf,application/pdf"
@@ -143,7 +143,7 @@ export default function Profile() {
           )}
         </label>
         {notice && (
-          <p role="status" className={`-mt-1 text-[8.5px] leading-snug ${notice.kind === "error" ? "text-red-400" : "text-slate-300"}`}>
+          <p role="status" className={`-mt-1 text-[0.5312rem] leading-snug ${notice.kind === "error" ? "text-red-400" : "text-slate-300"}`}>
             {notice.text}
           </p>
         )}
@@ -172,14 +172,14 @@ export default function Profile() {
         </Field>
 
         <Field label="Employers who scan your badge can see">
-          <p className="mt-0.5 text-[9.5px] text-slate-300">Name, program and skills</p>
+          <p className="mt-0.5 text-[0.5938rem] text-slate-300">Name, program and skills</p>
           <div className="mt-1.5 flex flex-col gap-1">
             {([
               ["resume", "Resume"],
               ["certs", "Certifications"],
               ["linkedin", "LinkedIn"],
             ] as const).map(([key, label]) => (
-              <label key={key} className="flex cursor-pointer items-center gap-1.5 text-[9.5px] text-white">
+              <label key={key} className="flex cursor-pointer items-center gap-1.5 text-[0.5938rem] text-white">
                 <input
                   type="checkbox"
                   checked={share[key]}
@@ -196,7 +196,7 @@ export default function Profile() {
 
       <button
         type="submit"
-        className="mt-auto w-full rounded-lg bg-brand py-2.5 text-[11px] font-bold text-white transition hover:brightness-110"
+        className="mt-auto w-full rounded-lg bg-brand py-2.5 text-[0.6875rem] font-bold text-white transition hover:brightness-110"
       >
         Get my badge
       </button>

@@ -9,9 +9,9 @@ export default function Scan() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <Link to="/badge" className="self-start text-[9.5px] text-slate-300 hover:text-white">‹ My badge</Link>
-      <h2 className="mt-2.5 text-[14px] font-extrabold">Scan a badge</h2>
-      <p className="mb-3 mt-1 text-[9px] text-slate-300">Paste a shared badge link to connect.</p>
+      <Link to="/badge" className="self-start text-[0.5938rem] text-slate-300 hover:text-white">‹ My badge</Link>
+      <h2 className="mt-2.5 text-[0.875rem] font-extrabold">Scan a badge</h2>
+      <p className="mb-3 mt-1 text-[0.5625rem] text-slate-300">Paste a shared badge link to connect.</p>
       <Scanner
         onProfile={(shared, encoded) => {
           add(shared);
