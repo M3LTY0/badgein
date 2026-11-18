@@ -2,30 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import Scanner from "../components/Scanner";
 import { useConnections } from "../ConnectionsContext";
 import { programGroup } from "../lib/badgeLink";
-import { useProfile } from "../ProfileContext";
+import { useAccount } from "../AccountContext";
 
 type Status = "New" | "Interested" | "Follow up" | "Not interested";
 type Candidate = {
-  /** Unique row key: the badge ID for scanned people, the name for the mock rows. */
+  /** The badge ID. */
   key: string;
   name: string; program: string; skills: string; certs: string; status: Status;
-  resume?: string; linkedin?: string; scanned?: boolean;
+  resume: string; linkedin: string;
 };
 
 const FILTERS = ["All", "Software Dev", "Data Analytics", "UX Design"] as const;
-
-// TODO(logic): replace this mock list with candidates fetched from an API (people who scanned or tapped in).
-const BASE: Omit<Candidate, "key">[] = [
-  { name: "Priya Shah", program: "Data Analytics", skills: "SQL, Tableau", certs: "Google Data Analytics", status: "Interested" },
-  { name: "Jordan Lee", program: "Software Dev", skills: "Java, AWS", certs: "AWS Certified Cloud Practitioner", status: "Follow up" },
-  { name: "Sam Okafor", program: "UX Design", skills: "Figma, Research", certs: "None listed", status: "Interested" },
-  { name: "Maya Chen", program: "Data Analytics", skills: "Python, Power BI", certs: "Microsoft Power BI Data Analyst", status: "New" },
-  { name: "Liam Brooks", program: "Software Dev", skills: "C#, Azure", certs: "Azure Fundamentals (AZ-900)", status: "Follow up" },
-  { name: "Aisha Rahman", program: "UX Design", skills: "Figma, Prototyping", certs: "Google UX Design", status: "New" },
-  { name: "Daniel Kim", program: "Software Dev", skills: "Python, Django", certs: "None listed", status: "Not interested" },
-  { name: "Chloe Martin", program: "UX Design", skills: "Research, Wireframing", certs: "None listed", status: "Follow up" },
-  { name: "Omar Haddad", program: "Data Analytics", skills: "Excel, R", certs: "None listed", status: "Not interested" },
-];
 
 const pill = (s: Status) =>
   s === "New"
@@ -37,13 +24,13 @@ const pill = (s: Status) =>
     : "bg-red-500/15 text-red-400";
 
 export default function Employer() {
-  const { profile } = useProfile();
+  const { account } = useAccount();
   const { connections, add } = useConnections();
   const [scanning, setScanning] = useState(false);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
   // TODO(logic): save status changes to a backend; they currently reset on reload.
   const [statuses, setStatuses] = useState<Record<string, Status>>({});
-  const [selected, setSelected] = useState("Brennan Carrier");
+  const [selected, setSelected] = useState("");
 
   // Close the scan dialog with Escape.
   useEffect(() => {
@@ -63,20 +50,12 @@ export default function Employer() {
       status: "New",
       resume: c.resume,
       linkedin: c.linkedin,
-      scanned: true,
     }));
-    // The signed-in demo user's own row is only shown until they appear as a real scanned connection.
-    const self: Candidate[] = connections.some((c) => c.id === profile.id)
-      ? []
-      : [{ key: profile.name, name: profile.name, program: "Software Dev", skills: profile.skills.join(", ") || "—", certs: profile.certs.join(", ") || "None listed", status: "New" }];
-    return [...scanned, ...self, ...BASE.map((c) => ({ ...c, key: c.name }))].map((c) => ({
-      ...c,
-      status: statuses[c.key] ?? c.status,
-    }));
-  }, [profile, statuses, connections]);
+    return scanned.map((c) => ({ ...c, status: statuses[c.key] ?? c.status }));
+  }, [statuses, connections]);
   const rows = all.filter((c) => filter === "All" || c.program === filter);
   const current = all.find((c) => c.key === selected) ?? all[0];
-  const set = (s: Status) => setStatuses((p) => ({ ...p, [current.key]: s }));
+  const set = (s: Status) => current && setStatuses((p) => ({ ...p, [current.key]: s }));
 
   const stats = [
     { n: rows.length, label: "Connections" },
@@ -89,8 +68,8 @@ export default function Employer() {
     <main className="employer-scale mx-auto w-full max-w-5xl flex-1 px-3 pb-10 pt-1">
       <section className="rounded-xl border border-line bg-phone p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* TODO(logic): employer and event name are hardcoded; take them from the signed-in employer account. */}
-          <h1 className="text-[15px] font-extrabold">Northwind Tech · Career Fair 2026</h1>
+          {/* TODO(logic): the event name is hardcoded; take it from the event the employer is attending. */}
+          <h1 className="text-[15px] font-extrabold">{account?.org || account?.name} · Career Fair 2026</h1>
           <div className="flex flex-wrap items-center gap-1.5">
             <button
               onClick={() => setScanning(true)}
@@ -121,6 +100,12 @@ export default function Employer() {
           ))}
         </div>
 
+        {!current ? (
+          <div className="mt-3 rounded-lg border border-dashed border-line px-3 py-8 text-center">
+            <p className="text-[12px] font-extrabold">No badges yet</p>
+            <p className="mt-1 text-[10px] text-slate-300">Tap Scan badge, then scan or paste someone's badge link. They'll appear here.</p>
+          </div>
+        ) : (
         <div className="mt-3 grid gap-3 md:grid-cols-[1fr_200px]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[420px] text-left text-[9px]">
@@ -132,12 +117,15 @@ export default function Employer() {
                 </tr>
               </thead>
               <tbody>
+                {rows.length === 0 && (
+                  <tr><td colSpan={4} className="px-2 py-4 text-center text-slate-400">No one in this group yet.</td></tr>
+                )}
                 {rows.map((c) => (
                   <tr
                     key={c.key}
                     onClick={() => setSelected(c.key)}
                     className={`cursor-pointer border-b border-line ${
-                      c.key === current.key ? "bg-[#12306a]" : "hover:bg-chip/60"
+                      c.key === current?.key ? "bg-[#12306a]" : "hover:bg-chip/60"
                     }`}
                   >
                     <td className="px-2 py-1.5 font-bold">{c.name}</td>
@@ -157,34 +145,20 @@ export default function Employer() {
             <p className="mt-1.5 text-[9.5px] text-slate-400">{current.program}</p>
             <p className="mt-3 text-[9.5px] text-slate-400">Certifications</p>
             <p className="mt-1.5 text-[9px] text-slate-300">{current.certs}</p>
-            {current.scanned ? (
-              <>
-                <p className="mt-3 text-[9.5px] text-slate-400">Skills</p>
-                <p className="mt-1.5 text-[9px] text-slate-300">{current.skills}</p>
-                <p className="mt-3 text-[9.5px] text-slate-400">Resume</p>
-                {/* TODO(backend): only the file name travels with the badge; link to the stored PDF once uploads exist. */}
-                <p className="mt-1.5 truncate text-[9px] text-slate-300">{current.resume ? `📄 ${current.resume}` : "Not shared"}</p>
-                {current.linkedin && (
-                  <a
-                    href={current.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 rounded-lg bg-linkedin py-2 text-center text-[10px] font-bold text-white transition hover:brightness-110"
-                  >
-                    View LinkedIn
-                  </a>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="mt-2 space-y-[5px]" aria-hidden>
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="h-px bg-brand/40" />
-                  ))}
-                </div>
-                {/* Mock candidates have no real resume; the lines above are a placeholder. */}
-                <p className="mt-3 text-[9.5px] text-slate-400">Resume preview</p>
-              </>
+            <p className="mt-3 text-[9.5px] text-slate-400">Skills</p>
+            <p className="mt-1.5 text-[9px] text-slate-300">{current.skills}</p>
+            <p className="mt-3 text-[9.5px] text-slate-400">Resume</p>
+            {/* TODO(backend): only the file name travels with the badge; link to the stored PDF once uploads exist. */}
+            <p className="mt-1.5 truncate text-[9px] text-slate-300">{current.resume ? `📄 ${current.resume}` : "Not shared"}</p>
+            {current.linkedin && (
+              <a
+                href={current.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 rounded-lg bg-linkedin py-2 text-center text-[10px] font-bold text-white transition hover:brightness-110"
+              >
+                View LinkedIn
+              </a>
             )}
             <button
               onClick={() => set("Interested")}
@@ -206,6 +180,7 @@ export default function Employer() {
             </button>
           </aside>
         </div>
+        )}
       </section>
     </main>
 

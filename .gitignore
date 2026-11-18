@@ -3,3 +3,4 @@ dist
 .env
 .env.local
 *.tsbuildinfo
+.vscode/settings.json

@@ -29,14 +29,13 @@ export default function Inbox() {
 
       {/* TODO(logic): real LinkedIn OAuth sign-in; on success, prefill name/program from the LinkedIn profile. */}
       <Link
-        to="/profile"
+        to="/welcome"
         className="mt-3.5 w-full rounded-md bg-linkedin py-2.5 text-[0.6562rem] font-bold text-white transition hover:brightness-110"
       >
         Continue with LinkedIn
       </Link>
-      {/* TODO(logic): manual sign-up (account creation) before moving on. */}
       <Link
-        to="/profile"
+        to="/welcome"
         className="mt-2 w-full rounded-md border border-line bg-page/40 py-2.5 text-[0.6562rem] font-bold text-white transition hover:bg-chip"
       >
         Sign up manually

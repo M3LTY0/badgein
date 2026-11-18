@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Link } from "react-router-dom";
+import EmergexButton from "../components/EmergexButton";
 import { useProfile } from "../ProfileContext";
 import { badgeUrl } from "../lib/badgeLink";
+
+/** A QR code can hold about 2,300 characters at this error-correction level; past that it can't be drawn at all. */
+const MAX_QR_LENGTH = 2300;
 
 export default function Badge() {
   const { profile } = useProfile();
@@ -13,7 +17,7 @@ export default function Badge() {
   // TODO(logic): the event name ("Career Fair 2026") is hardcoded below; take it from the event the user checked in to.
   const programShort = profile.program.split(",")[0].trim();
   const { share } = profile;
-  const shared = ["Skills", share.certs && "Certifications", share.resume && "Resume", share.linkedin && profile.linkedin && "LinkedIn"]
+  const shared = ["Skills", share.certs && "Certifications", share.resume && profile.resume && "Resume", share.linkedin && profile.linkedin && "LinkedIn"]
     .filter(Boolean)
     .join(" · ");
 
@@ -46,21 +50,27 @@ export default function Badge() {
       <div className="mt-3 flex flex-col items-center rounded-xl bg-gradient-to-b from-brand-deep to-[#0a2f8a] px-3 pb-3 pt-3">
         <span className="h-1 w-9 rounded-full bg-white/80" />
         <p className="mt-3.5 text-[0.7812rem] font-extrabold leading-tight">{profile.name}</p>
-        <p className="mt-0.5 text-[0.5312rem] text-blue-100">{programShort} · Career Fair 2026</p>
+        <p className="mt-0.5 text-[0.5312rem] text-blue-100">{[programShort, "Career Fair 2026"].filter(Boolean).join(" · ")}</p>
         {/* Encodes a link to this attendee's profile, honouring the sharing toggles on the profile screen. */}
         <div className="mt-2 rounded-lg bg-white p-1.5">
-          {/* size is 140px at the normal root font size; the style makes it grow with the phone screen. */}
-          <QRCodeSVG
-            value={url}
-            size={140}
-            style={{ width: "8.75rem", height: "8.75rem" }}
-            level="M"
-            fgColor="#0a3aa8"
-            bgColor="#ffffff"
-            marginSize={0}
-            role="img"
-            aria-label="Badge QR code"
-          />
+          {url.length > MAX_QR_LENGTH ? (
+            <p role="alert" className="flex h-[8.75rem] w-[8.75rem] items-center justify-center p-2 text-center text-[0.5625rem] font-medium leading-snug text-[#0a3aa8]">
+              Too much on this badge to fit in a QR code. Remove a few skills or certifications on your profile.
+            </p>
+          ) : (
+            /* size is 140px at the normal root font size; the style makes it grow with the phone screen. */
+            <QRCodeSVG
+              value={url}
+              size={140}
+              style={{ width: "8.75rem", height: "8.75rem" }}
+              level="M"
+              fgColor="#0a3aa8"
+              bgColor="#ffffff"
+              marginSize={0}
+              role="img"
+              aria-label="Badge QR code"
+            />
+          )}
         </div>
         <label className="mt-2 w-full">
           <span className="sr-only">Badge link</span>
@@ -84,6 +94,8 @@ export default function Badge() {
         </p>
         <p className="mt-2 text-center text-[0.4688rem] text-blue-200/80">Shares: {shared}</p>
       </div>
+
+      <div className="mt-2.5 empty:hidden"><EmergexButton /></div>
 
       {/* TODO(logic): Add to wallet (Apple/Google Wallet pass). */}
       <button type="button" className="mt-2.5 w-full rounded-lg border border-line py-2.5 text-[0.6875rem] font-bold text-white transition hover:bg-chip">

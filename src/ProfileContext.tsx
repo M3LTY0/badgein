@@ -12,21 +12,22 @@ export type ProfileData = {
 };
 type Ctx = { profile: ProfileData; update: (patch: Partial<ProfileData>) => void };
 
-const STORAGE_KEY = "badgein.profile";
+export const PROFILE_KEY = "badgein.profile";
+const STORAGE_KEY = PROFILE_KEY;
 
 const newId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID().slice(0, 8)
     : Math.random().toString(36).slice(2, 10);
 
-// TODO(logic): prefill this from the signed-in user instead of hardcoded demo data.
+// A new account starts with an empty profile. The name is filled in from the sign-up screen (see Welcome.tsx).
 const defaults: ProfileData = {
   id: newId(),
-  name: "Brennan Carrier",
-  program: "Software Development, SAIT",
+  name: "",
+  program: "",
   skills: [],
   certs: [],
-  resume: "Brennan_Carrier_Resume.pdf",
+  resume: "",
   linkedin: "",
   share: { resume: true, certs: true, linkedin: true },
 };

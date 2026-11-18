@@ -13,6 +13,17 @@ npm run dev          # http://localhost:5173
 - When adding to a phone screen, size things in `rem` or Tailwind's built-in sizes (not `px`) so they scale with the phone.
   The header and the employer dashboard are the exceptions, and they are sized in `px` on purpose.
 
+## Accounts (local only)
+
+- Anyone who opens the site signs up at `/welcome` as an **attendee** (makes a badge) or an **employer** (scans badges and
+  sees them in the dashboard). Name only, plus a company for employers. There is no password.
+- The account is saved in this browser's localStorage (`src/AccountContext.tsx`), one per browser. Each role only sees its own
+  screens: attendees get Profile, Badge and Scan, employers get the dashboard. Badge links (`/p`) open for anyone.
+- **Signing out deletes everything saved on that device**, including an employer's saved connections.
+- Employers see an attendee only after **scanning their badge**. An attendee's account lives on their own phone, so it can't
+  appear on an employer's screen by itself. To make that automatic, accounts need a server (see the TODO in `AccountContext.tsx`).
+- This is not real security: anyone using the device can use its account.
+
 ## Resume auto-fill (keyword matching)
 
 Uploading a PDF on the Profile screen fills in name, program, LinkedIn, skills and certifications.
@@ -45,3 +56,41 @@ The address in the QR is `VITE_PUBLIC_URL` if set, otherwise wherever the app is
 
 Once the app is on a public https address, anyone can open a badge link from any phone on any network.
 `vercel.json` is already set up so links like `/p` work when opened directly.
+
+### Option A: GitHub + Vercel website (recommended, redeploys automatically when you push)
+
+1. Make a free account at github.com, click **New repository**, name it `badgein`, leave it empty, click **Create**.
+2. In a terminal, inside this project folder:
+   ```
+   git init
+   git add .
+   git commit -m "badgeIn"
+   git branch -M main
+   git remote add origin https://github.com/YOUR-USERNAME/badgein.git
+   git push -u origin main
+   ```
+   (`.gitignore` keeps `node_modules`, `dist` and `.env` out of the upload.)
+3. Go to vercel.com, **Sign Up > Continue with GitHub**.
+4. Click **Add New > Project**, pick the `badgein` repo, click **Import**.
+5. Vercel detects Vite by itself (build command `npm run build`, output `dist`). Click **Deploy** and wait about a minute.
+6. You get an address like `https://badgein-abc123.vercel.app`. Open it on your phone.
+
+### Option B: command line only (no GitHub)
+
+```
+npx vercel          # first run: log in, accept the defaults
+npx vercel --prod   # publish to the real address
+```
+
+### After the first deploy
+
+- **Optional:** in Vercel, **Settings > Environment Variables**, add `VITE_PUBLIC_URL` = your address (no trailing path),
+  then **Deployments > Redeploy**. This makes badges created while developing on localhost point at the live site.
+- **Test it properly:** on your phone with Wi-Fi switched off (mobile data), open the address, fill in a profile, open
+  the badge, and scan it with a second phone's normal camera app. The profile page should open.
+- Vercel's free Hobby plan is meant for personal, non-commercial projects. If badgeIn becomes a business, check their terms.
+
+### Known limits until there is a backend
+
+Accounts, profiles and employers' saved connections still live in each person's own browser, resumes are shared by file name only,
+and a shared link can't be revoked.
