@@ -13,6 +13,17 @@ npm run dev          # http://localhost:5173
 - When adding to a phone screen, size things in `rem` or Tailwind's built-in sizes (not `px`) so they scale with the phone.
   The header and the employer dashboard are the exceptions, and they are sized in `px` on purpose.
 
+## Accounts (local only)
+
+- Anyone who opens the site signs up at `/welcome` as an **attendee** (makes a badge) or an **employer** (scans badges and
+  sees them in the dashboard). Name only, plus a company for employers. There is no password.
+- The account is saved in this browser's localStorage (`src/AccountContext.tsx`), one per browser. Each role only sees its own
+  screens: attendees get Profile, Badge and Scan, employers get the dashboard. Badge links (`/p`) open for anyone.
+- **Signing out deletes everything saved on that device**, including an employer's saved connections.
+- Employers see an attendee only after **scanning their badge**. An attendee's account lives on their own phone, so it can't
+  appear on an employer's screen by itself. To make that automatic, accounts need a server (see the TODO in `AccountContext.tsx`).
+- This is not real security: anyone using the device can use its account.
+
 ## Resume auto-fill (keyword matching)
 
 Uploading a PDF on the Profile screen fills in name, program, LinkedIn, skills and certifications.
@@ -81,5 +92,5 @@ npx vercel --prod   # publish to the real address
 
 ### Known limits until there is a backend
 
-Profiles and employers' saved connections still live in each person's own browser, resumes are shared by file name only,
+Accounts, profiles and employers' saved connections still live in each person's own browser, resumes are shared by file name only,
 and a shared link can't be revoked.

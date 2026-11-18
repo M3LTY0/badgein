@@ -8,7 +8,8 @@ type Ctx = {
   has: (id: string) => boolean;
 };
 
-const STORAGE_KEY = "badgein.connections";
+export const CONNECTIONS_KEY = "badgein.connections";
+const STORAGE_KEY = CONNECTIONS_KEY;
 
 function load(): Connection[] {
   try {

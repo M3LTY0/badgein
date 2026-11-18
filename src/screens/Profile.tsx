@@ -17,16 +17,32 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 const inputCls = "w-full bg-transparent text-[0.6562rem] text-white outline-none placeholder:text-slate-500";
 
-function MultiSelect({ values, onChange, placeholder, options }: {
-  values: string[]; onChange: (v: string[]) => void; placeholder: string; options: string[];
+/** Keeps the badge QR code small enough to scan: the QR holds everything listed here. */
+const MAX_CUSTOM_LENGTH = 40;
+const MAX_ITEMS = 20;
+
+function MultiSelect({ values, onChange, placeholder, options, addLabel }: {
+  values: string[]; onChange: (v: string[]) => void; placeholder: string; options: string[]; addLabel: string;
 }) {
+  const [draft, setDraft] = useState("");
+  const full = values.length >= MAX_ITEMS;
   const remaining = options.filter((o) => !values.includes(o));
+
+  /** Add what was typed. Matching a listed option (any capitalisation) uses the listed spelling; repeats are ignored. */
+  const addDraft = () => {
+    const typed = draft.trim().replace(/\s+/g, " ").slice(0, MAX_CUSTOM_LENGTH);
+    if (!typed) return;
+    const value = options.find((o) => o.toLowerCase() === typed.toLowerCase()) ?? typed;
+    if (!full && !values.some((v) => v.toLowerCase() === value.toLowerCase())) onChange([...values, value]);
+    setDraft("");
+  };
+
   return (
     <>
       <span className="relative block">
         <select
           value=""
-          onChange={(e) => e.target.value && onChange([...values, e.target.value])}
+          onChange={(e) => e.target.value && !full && onChange([...values, e.target.value])}
           className={`${inputCls} cursor-pointer appearance-none py-0.5 pl-1 pr-5 [&>option]:text-black`}
         >
           <option value="">{placeholder}</option>
@@ -36,6 +52,31 @@ function MultiSelect({ values, onChange, placeholder, options }: {
           <path d="M2 3.5 5 6.5 8 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </span>
+      <span className="mt-1 flex items-center gap-1 border-t border-line pt-1">
+        <input
+          aria-label={`Add your own ${addLabel}`}
+          className={inputCls}
+          value={draft}
+          maxLength={MAX_CUSTOM_LENGTH}
+          placeholder={`Or add your own ${addLabel}`}
+          onChange={(e) => setDraft(e.target.value)}
+          // Enter adds the entry. It must not submit the profile form.
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addDraft();
+            }
+          }}
+        />
+        <button
+          type="button"
+          onClick={addDraft}
+          className="flex-none rounded bg-chip px-1.5 py-0.5 text-[0.5312rem] font-semibold text-brand hover:bg-line"
+        >
+          Add
+        </button>
+      </span>
+      {full && <p className="mt-1 text-[0.5rem] text-slate-400">That's the limit of {MAX_ITEMS}. Remove one to add another.</p>}
       {values.length > 0 && (
         <ul className="mt-1.5 flex flex-wrap gap-1">
           {values.map((v) => (
@@ -155,10 +196,10 @@ export default function Profile() {
           <input aria-label="Program" className={inputCls} value={program} onChange={(e) => setProgram(e.target.value)} />
         </Field>
         <Field label="Skills">
-          <MultiSelect values={skills} onChange={setSkills} placeholder="Select a skill…" options={SKILLS} />
+          <MultiSelect values={skills} onChange={setSkills} placeholder="Select a skill…" options={SKILLS} addLabel="skill" />
         </Field>
         <Field label="Certifications">
-          <MultiSelect values={certs} onChange={setCerts} placeholder="Select a certification…" options={CERTIFICATIONS} />
+          <MultiSelect values={certs} onChange={setCerts} placeholder="Select a certification…" options={CERTIFICATIONS} addLabel="certification" />
         </Field>
 
         <Field label="LinkedIn profile">
