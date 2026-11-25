@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import Scanner from "../components/Scanner";
-import { useConnections } from "../ConnectionsContext";
+import { useConnections, type RecruitmentStatus } from "../ConnectionsContext";
+import { exportCandidatesCsv } from "../lib/exportCandidates";
 import { programGroup } from "../lib/badgeLink";
 import { useAccount } from "../AccountContext";
 
-type Status = "New" | "Interested" | "Follow up" | "Not interested";
+type Status = RecruitmentStatus;
 type Candidate = {
   /** The badge ID. */
   key: string;
   name: string; program: string; skills: string; certs: string; status: Status;
-  resume: string; linkedin: string;
+  resume: string; linkedin: string; notes: string; savedAt: number;
 };
 
 const FILTERS = ["All", "Software Dev", "Data Analytics", "UX Design"] as const;
@@ -25,11 +26,9 @@ const pill = (s: Status) =>
 
 export default function Employer() {
   const { account } = useAccount();
-  const { connections, add } = useConnections();
+  const { connections, add, updateRecruitment } = useConnections();
   const [scanning, setScanning] = useState(false);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
-  // TODO(logic): save status changes to a backend; they currently reset on reload.
-  const [statuses, setStatuses] = useState<Record<string, Status>>({});
   const [selected, setSelected] = useState("");
 
   // Close the scan dialog with Escape.
@@ -47,15 +46,17 @@ export default function Employer() {
       program: programGroup(c.program),
       skills: c.skills.join(", ") || "—",
       certs: c.certs.join(", ") || "None listed",
-      status: "New",
+      status: c.status ?? "New",
+      notes: c.notes ?? "",
+      savedAt: c.savedAt,
       resume: c.resume,
       linkedin: c.linkedin,
     }));
-    return scanned.map((c) => ({ ...c, status: statuses[c.key] ?? c.status }));
-  }, [statuses, connections]);
+    return scanned;
+  }, [connections]);
   const rows = all.filter((c) => filter === "All" || c.program === filter);
   const current = all.find((c) => c.key === selected) ?? all[0];
-  const set = (s: Status) => current && setStatuses((p) => ({ ...p, [current.key]: s }));
+  const set = (s: Status) => current && updateRecruitment(current.key, { status: s });
 
   const stats = [
     { n: rows.length, label: "Connections" },
@@ -71,6 +72,14 @@ export default function Employer() {
           {/* TODO(logic): the event name is hardcoded; take it from the event the employer is attending. */}
           <h1 className="text-[15px] font-extrabold">{account?.org || account?.name} · Career Fair 2026</h1>
           <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              disabled={connections.length === 0}
+              onClick={() => exportCandidatesCsv(connections)}
+              className="rounded-full border border-line px-3 py-1 text-[9px] font-bold text-white hover:bg-chip disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Export CSV
+            </button>
             <button
               onClick={() => setScanning(true)}
               className="rounded-full bg-brand px-3 py-1 text-[9px] font-bold text-white hover:brightness-110"
@@ -160,6 +169,24 @@ export default function Employer() {
                 View LinkedIn
               </a>
             )}
+            <label htmlFor="employer-candidate-notes" className="mt-3 text-[9.5px] text-slate-400">Private notes (saved on this device)</label>
+            <textarea
+              id="employer-candidate-notes"
+              key={current.key}
+              value={current.notes}
+              onChange={(e) => updateRecruitment(current.key, { notes: e.target.value })}
+              maxLength={3000}
+              rows={4}
+              placeholder="Notes about this candidate..."
+              className="mt-1 w-full resize-y rounded-lg border border-line bg-chip p-2 text-[10px] text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-brand"
+            />
+            <p className="mt-1 text-[9px] text-slate-400">Status: {current.status}</p>
+            <button
+              onClick={() => set("New")}
+              className="mt-2 rounded-lg border border-line py-2 text-[10px] font-bold transition hover:bg-chip"
+            >
+              Mark new
+            </button>
             <button
               onClick={() => set("Interested")}
               className="mt-2 rounded-lg bg-brand py-2 text-[10px] font-bold transition hover:brightness-110"
