@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { SharedProfile } from "./lib/badgeLink";
 
-export type Connection = SharedProfile & { savedAt: number };
+export type RecruitmentStatus = "New" | "Interested" | "Follow up" | "Not interested";
+export type Connection = SharedProfile & { savedAt: number; status?: RecruitmentStatus; notes?: string };
 type Ctx = {
   connections: Connection[];
   add: (p: SharedProfile) => void;
   has: (id: string) => boolean;
+  updateRecruitment: (id: string, changes: { status?: RecruitmentStatus; notes?: string }) => void;
 };
 
 export const CONNECTIONS_KEY = "badgein.connections";
@@ -15,7 +17,7 @@ function load(): Connection[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.filter((c): c is Connection => c && typeof c === "object" && typeof c.id === "string" && typeof c.savedAt === "number") : [];
   } catch {
     return [];
   }
@@ -39,12 +41,14 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
   const add = (p: SharedProfile) =>
     setConnections((list) =>
       list.some((c) => c.id === p.id)
-        ? list.map((c) => (c.id === p.id ? { ...p, savedAt: c.savedAt } : c))
+        ? list.map((c) => (c.id === p.id ? { ...p, savedAt: c.savedAt, status: c.status, notes: c.notes } : c))
         : [{ ...p, savedAt: Date.now() }, ...list]
     );
   const has = (id: string) => connections.some((c) => c.id === id);
+  const updateRecruitment: Ctx["updateRecruitment"] = (id, changes) =>
+    setConnections((list) => list.map((c) => c.id === id ? { ...c, ...changes } : c));
 
-  return <ConnectionsCtx.Provider value={{ connections, add, has }}>{children}</ConnectionsCtx.Provider>;
+  return <ConnectionsCtx.Provider value={{ connections, add, has, updateRecruitment }}>{children}</ConnectionsCtx.Provider>;
 }
 
 export function useConnections() {
