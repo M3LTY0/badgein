@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import jsQR from "jsqr";
 import { parseBadgeLink, type SharedProfile } from "../lib/badgeLink";
 
 type Props = {
@@ -41,11 +42,31 @@ export default function Scanner({ onProfile }: Props) {
         BarcodeDetector?: new (options: { formats: string[] }) => QRDetector;
       }
     ).BarcodeDetector;
-    if (!navigator.mediaDevices?.getUserMedia || !Detector) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       setCam("unsupported");
       return;
     }
-    const detector = new Detector({ formats: ["qr_code"] });
+    // Use the browser's built-in QR reader where there is one (fast). Many browsers (iPhone, Firefox,
+    // Chrome/Vivaldi/Edge on Windows) do not have it, so fall back to jsQR, which works everywhere.
+    let detector: QRDetector | null = null;
+    try {
+      detector = Detector ? new Detector({ formats: ["qr_code"] }) : null;
+    } catch {
+      detector = null;
+    }
+
+    const readQR = async (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): Promise<string | undefined> => {
+      if (detector) {
+        try {
+          return (await detector.detect(canvas))[0]?.rawValue;
+        } catch {
+          // The built-in reader exists but cannot decode here: switch to jsQR for the rest of this session.
+          detector = null;
+        }
+      }
+      const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      return jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" })?.data || undefined;
+    };
     let stream: MediaStream | null = null;
     let raf = 0;
     let cancelled = false;
@@ -64,9 +85,8 @@ export default function Scanner({ onProfile }: Props) {
         if (ctx) {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           try {
-            const codes = await detector.detect(canvas);
+            const value = await readQR(canvas, ctx);
             if (cancelled) return;
-            const value = codes[0]?.rawValue;
             if (value) {
               const parsed = parseBadgeLink(value);
               if (parsed) {
