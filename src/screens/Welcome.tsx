@@ -1,7 +1,8 @@
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { homeFor, useAccount, type Role } from "../AccountContext";
 import { useProfile } from "../ProfileContext";
+import { supabase } from "../lib/supabase";
 
 const inputCls = "w-full bg-transparent text-[0.6562rem] text-white outline-none placeholder:text-slate-500";
 
@@ -28,6 +29,21 @@ export default function Welcome() {
   const [name, setName] = useState("");
   const [org, setOrg] = useState("");
   const [error, setError] = useState("");
+
+  // Coming back from LinkedIn: create the local attendee account from the LinkedIn name.
+  useEffect(() => {
+    if (account) return;
+    if (sessionStorage.getItem("badgein-linkedin") !== "1") return;
+    sessionStorage.removeItem("badgein-linkedin");
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user;
+      if (!user) return;
+      const n = (user.user_metadata?.name as string) || user.email || "Attendee";
+      update({ name: n });
+      justCreated.current = true;
+      createAccount({ role: "attendee", name: n, org: "" });
+    });
+  }, [account]);
 
   // Someone who is already signed in just gets sent home. Someone who has just signed up lands on the profile screen
   // to fill it in (attendees) or on the dashboard (employers).
