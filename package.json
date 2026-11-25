@@ -10,6 +10,8 @@
     "api": "node --env-file-if-exists=.env server/parse-resume.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.2",
     "jsqr": "^1.4.0",
     "pdfjs-dist": "^6.5.438",
     "qrcode.react": "^4.2.0",

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import Logo from "../components/Logo";
+import { continueWithLinkedIn } from "../lib/linkedin";
 
 // TODO(logic): these chips are display-only. Decide whether they should link anywhere.
 const chips = ["Register", "Scan", "Connect"];
@@ -27,13 +28,13 @@ export default function Inbox() {
         ))}
       </div>
 
-      {/* TODO(logic): real LinkedIn OAuth sign-in; on success, prefill name/program from the LinkedIn profile. */}
-      <Link
-        to="/welcome"
+      <button
+        type="button"
+        onClick={continueWithLinkedIn}
         className="mt-3.5 w-full rounded-md bg-linkedin py-2.5 text-[0.6562rem] font-bold text-white transition hover:brightness-110"
       >
         Continue with LinkedIn
-      </Link>
+      </button>
       <Link
         to="/welcome"
         className="mt-2 w-full rounded-md border border-line bg-page/40 py-2.5 text-[0.6562rem] font-bold text-white transition hover:bg-chip"
